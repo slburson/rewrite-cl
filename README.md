@@ -44,6 +44,31 @@ Clone this repository and load via ASDF:
 ;; => "(defun bar (x) x)"
 ```
 
+## Examples
+
+Here's an example by [Scott L. Burson](https://github.com/slburson) that downcases all symbols and keywords in a Common Lisp source file:
+
+```lisp
+(in-package :rewrite-cl)
+
+(defun downcase-code-in-file (filename)
+  (let ((trees (parse-file-all filename)))
+    (with-open-file (s filename :direction :output :if-exists :rename)
+      (dolist (tree trees)
+        (write (zip-root-string
+                 (zip-prewalk (of-node tree)
+                              (lambda (z)
+                                (if (member (zip-tag z) '(:symbol :keyword))
+                                    (let ((new (make-token-node
+                                                 (zip-sexpr z)
+                                                 (string-downcase (zip-string z)))))
+                                      (zip-replace z new))
+                                  z))))
+               :stream s :escape nil)))))
+```
+
+See the [examples/](examples/) directory for more.
+
 ## Core Concepts
 
 ### Nodes
